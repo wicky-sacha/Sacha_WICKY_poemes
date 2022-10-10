@@ -39,6 +39,10 @@ import { SupabaseAuthClient } from '@supabase/supabase-js/dist/module/lib/Supaba
       <label>Hidden poem</label>
       <br><button v-on:click="createPoem()">Ajouter le poème</button>
       <button v-on:click="fetchPoems()">Liste de poèmes</button><br>
+
+      <input type="text" required name="title" v-model="mot" placeholder="Mots-clés"><br>
+      <button v-on:click="filtrerPoems()">Filtrer les Poèmes</button><br>
+
       <label for="poemtitle" id="poemtitle" style="color: teal;font-weight: 500;"> ... </label>
       <img id="poemillustration" src="./assets/null.jpg" alt="poem illustration" width="75" height="75"
         style="background-color:gray;" /><br>
@@ -159,6 +163,28 @@ export default {
     },
     //this function allows to display the next accessibe poem for the current user
     //the fetch button should be selected before
+    async filtrerPoems() {
+      //mange supabase access exceptions
+      try {
+        //select all accessible poems (owned poems or public ones) 
+        const { data, error } = await supabase
+          .from('poems')
+          .select()
+          .like('title', '%' + this.mot + '%')
+        poemsList = data
+        if (error) throw error;
+        //display the first accessible poem if there is at least one poem
+        if (data.length > 0) {
+          document.getElementById('poemtitle').innerHTML = data[0].title + "    "
+          document.getElementById('poemcontent').value = data[0].content
+          document.getElementById('poemillustration').src = data[0].illustrationurl
+        }
+        //store the indexof the currently displayed poem
+        currentpoem = 0;
+      } catch (error) {
+        alert(error.error_description || error.message);
+      }
+    },
     nextPoem() {
       if (currentpoem < poemsList.length - 1) {
         currentpoem++
